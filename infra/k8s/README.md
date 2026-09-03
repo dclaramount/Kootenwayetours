@@ -5,12 +5,11 @@ Manifests for deploying Kootenwaye Tours to the Civo cluster, per
 §11. Kept as plain Kustomize (a `kustomization.yaml` plus one file per
 resource) — no overlays yet, since there's currently one environment.
 
-**The app itself (Postgres, the Next.js Deployment) has not been applied
-yet.** Cluster networking/TLS plumbing has: the `kootenwayetours` namespace,
-the `kootenwayetours-tls` Secret, `ingress.yaml`, and both files under
-`cluster/` are live on the cluster and verified working end-to-end
-(DNS → Cloudflare → origin TLS → Traefik → routed by host → 404, since
-there's no backend yet). See "Deploying" for the rest.
+**Live**: `https://kootenwayetours.com` is up and serving real traffic —
+Postgres, the migrated (but empty — no seed data) database, and the app
+Deployment are all applied and healthy. See "Deployed state" below for
+exactly what that involved and two real bugs found only by actually
+checking behavior end-to-end rather than trusting `kubectl apply` succeeding.
 
 ## Cluster context
 
@@ -93,73 +92,86 @@ of `kustomization.yaml`.
 | `cluster/traefik-loadbalancer.yaml` | Dedicated public IP, currently **not applied** — see "Cluster networking" |
 | `cluster/traefik-ingressclass.yaml` | **Applied.** Missing cluster plumbing Traefik needed to match any Ingress at all — see "Cluster context" |
 | `namespace.yaml` | **Applied.** `kootenwayetours` namespace |
-| `configmap.yaml` | Non-secret app config (`NODE_ENV`, `UPLOAD_DIR`, ...) |
-| `secret.example.yaml` | **Template only** — shows the Secret's shape, not meant to be applied |
-| `postgres-statefulset.yaml` / `postgres-service.yaml` | In-cluster Postgres, its own 2Gi PVC |
-| `app-deployment.yaml` / `app-service.yaml` | The Next.js app, 1 replica (see note in the file) |
-| `app-pvc-uploads.yaml` | The 5Gi uploads volume (planning-design §9) |
-| `ingress.yaml` | **Applied**, with TLS. Routes external traffic to the app Service — currently 404s since that Service doesn't exist yet |
-
-Not yet included, follow-ups once this first deploy is working:
-database/uploads backup CronJobs and TLS (Cloudflare Origin CA cert, per
-the cost discussion — see "Cluster networking"; no cert-manager install
-needed).
+| `configmap.yaml` | **Applied.** Non-secret app config (`NODE_ENV`, `UPLOAD_DIR`, ...) |
+| `secret.example.yaml` | **Template only** — shows the Secret's shape, not meant to be applied. The real one was created imperatively (see "Deployed state") |
+| `postgres-statefulset.yaml` / `postgres-service.yaml` | **Applied.** In-cluster Postgres, its own 2Gi PVC |
+| `app-deployment.yaml` / `app-service.yaml` | **Applied.** The Next.js app, 1 replica (see note in the file) |
+| `app-pvc-uploads.yaml` | **Applied.** The 5Gi uploads volume (planning-design §9) |
+| `ingress.yaml` | **Applied**, with TLS. Routes external traffic to the app Service |
 
 CI (`.github/workflows/ci.yml` at the repo root) builds and pushes the
-image on every push to `main` — see step 1 below for the one manual step
-that still needs doing after its first run.
+image to `ghcr.io/dclaramount/kootenwayetours` on every push to `main`; the
+package is public, so the cluster needs no registry credentials to pull it.
 
-## Deploying
+Not yet included: database/uploads backup CronJobs, and a migration Job
+(migrations were applied by hand once — see below — there's no automated
+"run on deploy" path yet).
 
-1. **Get an image into GHCR.** `.github/workflows/ci.yml` builds and pushes
-   `ghcr.io/dclaramount/kootenwayetours:latest` automatically on every push
-   to `main` — nothing to do by hand once that's landed. One manual,
-   one-time step after the *first* successful push: the package defaults to
-   **private**, and the cluster has no registry credentials configured, so
-   either
-   - make the package public (GitHub → your profile → Packages →
-     `kootenwayetours` → Package settings → Change visibility), or
-   - create a `kubectl create secret docker-registry` imagePullSecret with a
-     PAT that has `read:packages`, and reference it in
-     `app-deployment.yaml`'s `imagePullSecrets`.
+## Deployed state (2026-09-03)
 
-   (No CI run yet, or want to test locally first? `docker build -f
-   infra/docker/Dockerfile -t ghcr.io/dclaramount/kootenwayetours:latest .
-   && docker push ...` does the same thing by hand.)
+First real deploy, done manually, step by step, verifying actual behavior
+at each step rather than trusting that a `kubectl apply` succeeding meant
+it worked. Two real bugs turned up this way that a docker build's exit
+code alone would never have caught:
 
-2. **Create the real Secret** (never commit actual values — this writes
-   directly to the cluster, not to a file in this repo):
-   ```bash
-   kubectl --context main-cluster-civo create namespace kootenwayetours \
-     --dry-run=client -o yaml | kubectl --context main-cluster-civo apply -f -
+1. **Prisma engine architecture mismatch.** The image was built and tested
+   locally on Apple Silicon (arm64) and looked fine — but CI builds
+   `linux/amd64` (matching the Civo node), and the Prisma query engine path
+   had been hardcoded to the arm64 filename. The app crash-looped on the
+   real cluster with `PrismaClientInitializationError` even though nothing
+   was wrong in the application logs, only visible once actually watching
+   pod behavior on the cluster. Fixed in
+   [`infra/docker/docker-entrypoint.sh`](../docker/docker-entrypoint.sh) by
+   resolving the engine path at container *start* based on the
+   architecture actually running it, and re-verified by building and
+   running the image under `linux/amd64` emulation before pushing.
+2. **Probe timeouts too tight for this node.** `readinessProbe`/
+   `livenessProbe` had no `timeoutSeconds` (Kubernetes default: 1s). On
+   this 1-vCPU node, shared with Postgres and every system pod, that was
+   often not enough time for `/api/ready`'s real DB round-trip — the app
+   kept getting killed and restarted with nothing wrong in its logs.
+   Bumped to 5s with `failureThreshold: 3` in `app-deployment.yaml`.
 
-   kubectl --context main-cluster-civo create secret generic kootenwayetours-secrets \
-     --namespace kootenwayetours \
-     --from-literal=POSTGRES_USER=kootenwaye \
-     --from-literal=POSTGRES_PASSWORD="$(openssl rand -base64 24)" \
-     --from-literal=POSTGRES_DB=kootenwaye \
-     --from-literal=SESSION_SECRET="$(openssl rand -base64 32)" \
-     --from-literal=DATABASE_URL="postgresql://kootenwaye:<same password as above>@postgres.kootenwayetours.svc.cluster.local:5432/kootenwaye?schema=public"
-   ```
+Other things worth knowing:
 
-3. **Apply everything else:**
-   ```bash
-   kubectl --context main-cluster-civo apply -k infra/k8s/
-   ```
+- **The database is intentionally empty** — migrations were applied, no
+  seed data. (Decision: don't put fictional placeholder tours/blog posts,
+  meant for local dev preview, on the real domain.)
+- **`kubectl port-forward` was unreliable** in the environment this was
+  deployed from (connections silently never established, no error) even
+  though `kubectl exec` worked fine. If a future `prisma migrate deploy`
+  needs to run and port-forward misbehaves the same way, the fallback used
+  here: apply the migration SQL directly via `kubectl exec` into the
+  Postgres pod, piped through `psql`, plus a manual insert into
+  `_prisma_migrations` so Prisma's own tooling still recognizes it as
+  applied later. See git history on this file for the exact commands.
+- **Password generation gotcha**: the first `kootenwayetours-secrets`
+  attempt used `openssl rand -base64`, which can contain `/` and `+` —
+  both break unescaped inside a `postgresql://` connection string
+  (`P1013: invalid port number`, since `/` gets read as a path separator).
+  Use `openssl rand -hex 24` (or otherwise URL-safe) for
+  `POSTGRES_PASSWORD` instead. Also: Postgres only applies
+  `POSTGRES_PASSWORD` on first init of an *empty* data volume — changing
+  the Secret later doesn't rotate it; the PVC has to be deleted (fine when
+  there's no real data yet, not fine once there is).
 
-4. **Run migrations** against the new database (one-off, from your machine
-   or a temporary pod — there's no migration Job wired up yet):
-   ```bash
-   kubectl --context main-cluster-civo port-forward svc/postgres -n kootenwayetours 5432:5432
-   DATABASE_URL="postgresql://kootenwaye:<password>@localhost:5432/kootenwaye?schema=public" npx prisma migrate deploy
-   ```
+## Redeploying / operating
 
-5. Check rollout status and the health endpoint:
-   ```bash
-   kubectl --context main-cluster-civo -n kootenwayetours rollout status deployment/app
-   kubectl --context main-cluster-civo -n kootenwayetours port-forward svc/app 3000:80
-   curl localhost:3000/api/ready
-   ```
+- **New image after a `main` push**: CI publishes it automatically;
+  `kubectl --context main-cluster-civo rollout restart deployment/app -n kootenwayetours`
+  picks it up (the `:latest` tag alone won't — nothing tells the running
+  pod to re-pull otherwise).
+- **Manifest changes**: `kubectl --context main-cluster-civo apply -k infra/k8s/`
+  (idempotent — safe to rerun even when most of it is unchanged).
+- **New migrations**: prefer `kubectl port-forward svc/postgres -n kootenwayetours 5432:5432`
+  and `prisma migrate deploy` against `localhost:5432` from a real machine —
+  the manual `exec`+`psql` route above was a fallback, not the normal path.
+- **Status check**:
+  ```bash
+  kubectl --context main-cluster-civo -n kootenwayetours get pods
+  kubectl --context main-cluster-civo -n kootenwayetours rollout status deployment/app
+  curl https://kootenwayetours.com/api/ready
+  ```
 
 ## Validating manifests without a cluster
 

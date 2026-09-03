@@ -14,19 +14,19 @@ Kubernetes cluster.
   by Prisma/PostgreSQL, seeded with sample content. No admin UI, auth, or
   image upload pipeline yet. See the root [`README.md`](README.md) for the
   local quickstart.
-- **Infrastructure**: Kubernetes manifests for the Civo cluster live in
-  [`infra/k8s/`](infra/k8s/). The app itself (Postgres, the Next.js
-  Deployment) isn't applied yet, but the networking/TLS path in front of it
-  is **live and verified**: `https://kootenwayetours.com` resolves through
-  Cloudflare (Full strict) to the cluster's Traefik and gets routed
-  correctly (currently 404, since there's no backend Service yet). See that
-  directory's README for exactly what's applied vs. still just a manifest,
-  and the remaining deploy steps.
+- **Live**: `https://kootenwayetours.com` is deployed and serving real
+  traffic on the Civo cluster — Postgres, the migrated (but empty, no seed
+  data) database, and the app Deployment are all applied and healthy.
+  Manifests live in [`infra/k8s/`](infra/k8s/); see that directory's README
+  ("Deployed state") for exactly what was involved, including two real
+  bugs (a Prisma engine architecture mismatch, probe timeouts too tight
+  for this node) that only surfaced by checking actual pod behavior on the
+  cluster, not by trusting `kubectl apply` succeeding.
 - **Domain**: `kootenwayetours.com`, registered, DNS on Cloudflare
-  (proxied, pointing at the node's IP). TLS is a Cloudflare Origin CA cert
-  installed as a cluster Secret — chosen over cert-manager specifically to
-  avoid running extra pods on this cluster's very small node (1 vCPU /
-  ~940Mi).
+  (proxied, pointing at the node's IP, Full-strict TLS). TLS is a
+  Cloudflare Origin CA cert installed as a cluster Secret — chosen over
+  cert-manager specifically to avoid running extra pods on this cluster's
+  very small node (1 vCPU / ~940Mi).
 - **Cluster access**: the Civo cluster kubeconfig has been merged into the
   local multi-cluster kubeconfig (`~/Documents/civo-main-node-kubeconfig`,
   referenced via `$KUBECONFIG`) as context `main-cluster-civo`. That context
@@ -52,8 +52,8 @@ overwritten in place.
   and a phased implementation plan (P1–P8). The app scaffold and infra
   manifests above follow this proposal directly.
   **Open questions** (§13 of the document, still unresolved): online
-  booking/payment scope, site language, transactional email provider, and
-  the real domain name.
+  booking/payment scope, site language, transactional email provider.
+  (Domain name is resolved — see "Current state" above.)
 
 When a new iteration changes the proposal materially, add a new
 `iteration-N-*` file rather than editing a previous one, and update this

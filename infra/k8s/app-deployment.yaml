@@ -26,8 +26,6 @@ spec:
     spec:
       containers:
         - name: app
-          # TODO: point at a real published tag once the GitHub Actions
-          # pipeline is building and pushing images (see repo root README).
           image: ghcr.io/dclaramount/kootenwayetours:latest
           ports:
             - name: http
@@ -53,12 +51,21 @@ spec:
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
+            # This node is heavily CPU-contended (1 vCPU shared across every
+            # pod on the cluster) and /api/ready does a real DB round-trip —
+            # the Kubernetes default 1s probe timeout is too tight here and
+            # was causing false-positive failures/restarts under load, not
+            # actual app errors (nothing in the app logs, ever).
+            timeoutSeconds: 5
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /api/health
               port: http
-            initialDelaySeconds: 10
-            periodSeconds: 15
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
       volumes:
         - name: uploads
           persistentVolumeClaim:

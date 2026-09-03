@@ -1,10 +1,10 @@
 # Uses Traefik, which is already running on the cluster (k3s default).
 #
-# TLS is commented out until the Cloudflare Origin CA cert is generated and
-# installed as the `kootenwayetours-tls` Secret — see infra/k8s/README.md
-# ("Cluster context" — TLS approach, decided on cost grounds over
-# cert-manager). Until then this Ingress serves plain HTTP; Cloudflare's
-# proxy still gives visitors HTTPS at the edge either way.
+# TLS: Cloudflare Origin CA cert (not cert-manager — see infra/k8s/README.md
+# "Cluster context" for why). The `kootenwayetours-tls` Secret was created
+# imperatively from that cert/key (never committed to this repo) and
+# already exists on the cluster. Cloudflare's SSL/TLS mode needs to be
+# "Full (strict)" for this to actually be used/validated — see README.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -12,11 +12,11 @@ metadata:
   namespace: kootenwayetours
 spec:
   ingressClassName: traefik
-  # tls:
-  #   - hosts:
-  #       - kootenwayetours.com
-  #       - www.kootenwayetours.com
-  #     secretName: kootenwayetours-tls
+  tls:
+    - hosts:
+        - kootenwayetours.com
+        - www.kootenwayetours.com
+      secretName: kootenwayetours-tls
   rules:
     - host: kootenwayetours.com
       http:

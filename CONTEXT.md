@@ -15,16 +15,27 @@ Kubernetes cluster.
   image upload pipeline yet. See the root [`README.md`](README.md) for the
   local quickstart.
 - **Infrastructure**: Kubernetes manifests for the Civo cluster live in
-  [`infra/k8s/`](infra/k8s/) (namespace, Postgres StatefulSet, app
-  Deployment, PVCs, Ingress). **Not yet applied to the cluster** — see that
-  directory's README for prerequisites and the deploy steps.
+  [`infra/k8s/`](infra/k8s/). The app itself (Postgres, the Next.js
+  Deployment) isn't applied yet, but the networking/TLS path in front of it
+  is **live and verified**: `https://kootenwayetours.com` resolves through
+  Cloudflare (Full strict) to the cluster's Traefik and gets routed
+  correctly (currently 404, since there's no backend Service yet). See that
+  directory's README for exactly what's applied vs. still just a manifest,
+  and the remaining deploy steps.
+- **Domain**: `kootenwayetours.com`, registered, DNS on Cloudflare
+  (proxied, pointing at the node's IP). TLS is a Cloudflare Origin CA cert
+  installed as a cluster Secret — chosen over cert-manager specifically to
+  avoid running extra pods on this cluster's very small node (1 vCPU /
+  ~940Mi).
 - **Cluster access**: the Civo cluster kubeconfig has been merged into the
   local multi-cluster kubeconfig (`~/Documents/civo-main-node-kubeconfig`,
   referenced via `$KUBECONFIG`) as context `main-cluster-civo`. That context
   currently points at Civo's `testing-cluster` (single small k3s node) —
   worth confirming whether this project should eventually move to a
   dedicated cluster before real traffic lands on it.
-- **CI**: no GitHub Actions pipeline yet (build/validate the Docker image).
+- **CI**: `.github/workflows/ci.yml` typechecks, lints, and builds/pushes
+  the Docker image to `ghcr.io/dclaramount/kootenwayetours` on pushes to
+  `main`, using GitHub's own token.
 
 ## Planning & design
 

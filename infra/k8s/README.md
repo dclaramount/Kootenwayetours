@@ -5,8 +5,12 @@ Manifests for deploying Kootenwaye Tours to the Civo cluster, per
 §11. Kept as plain Kustomize (a `kustomization.yaml` plus one file per
 resource) — no overlays yet, since there's currently one environment.
 
-**Nothing here has been applied to the cluster.** These are manifests only;
-see "Deploying" below for how to actually apply them when ready.
+**The app itself (Postgres, the Next.js Deployment) has not been applied
+yet.** Cluster networking/TLS plumbing has: the `kootenwayetours` namespace,
+the `kootenwayetours-tls` Secret, `ingress.yaml`, and both files under
+`cluster/` are live on the cluster and verified working end-to-end
+(DNS → Cloudflare → origin TLS → Traefik → routed by host → 404, since
+there's no backend yet). See "Deploying" for the rest.
 
 ## Cluster context
 
@@ -27,9 +31,22 @@ Worth knowing before deploying:
   node IP directly, and the tradeoff involved.
 - **TLS: Cloudflare Origin CA cert**, not cert-manager — decided on cost
   grounds (cert-manager's controller/webhook/cainjector pods aren't free on
-  this small a node; Origin CA needs zero cluster resources). TLS in
-  `ingress.yaml` is still commented out until that cert is generated and
-  installed as a Secret — not done yet.
+  this small a node; Origin CA needs zero cluster resources). **Done**: the
+  cert/key were generated in Cloudflare and installed as the
+  `kootenwayetours-tls` Secret imperatively (never committed to this
+  repo — see step 2 below for the same command if it ever needs
+  recreating). Cloudflare's SSL/TLS mode is set to **Full (strict)** and
+  verified working: `https://kootenwayetours.com` presents a valid public
+  cert to visitors and reaches Traefik correctly.
+- **`cluster/traefik-ingressclass.yaml` — applied, and required.** This
+  cluster's Traefik was installed without ever registering an
+  `IngressClass` object, so any Ingress with `ingressClassName: traefik`
+  (ours included) went completely unmatched and silently fell back to
+  Traefik's self-signed default cert — no error anywhere, just the wrong
+  cert. Found this by actually checking what cert got served
+  (`openssl s_client`), not by assuming the apply succeeding meant it
+  worked. If this ever needs recreating (e.g. cluster rebuild), reapply it
+  before expecting `ingress.yaml`'s TLS to take effect.
 
 ## Cluster networking
 
@@ -74,13 +91,14 @@ of `kustomization.yaml`.
 | File | Purpose |
 | --- | --- |
 | `cluster/traefik-loadbalancer.yaml` | Dedicated public IP, currently **not applied** — see "Cluster networking" |
-| `namespace.yaml` | `kootenwayetours` namespace |
+| `cluster/traefik-ingressclass.yaml` | **Applied.** Missing cluster plumbing Traefik needed to match any Ingress at all — see "Cluster context" |
+| `namespace.yaml` | **Applied.** `kootenwayetours` namespace |
 | `configmap.yaml` | Non-secret app config (`NODE_ENV`, `UPLOAD_DIR`, ...) |
 | `secret.example.yaml` | **Template only** — shows the Secret's shape, not meant to be applied |
 | `postgres-statefulset.yaml` / `postgres-service.yaml` | In-cluster Postgres, its own 2Gi PVC |
 | `app-deployment.yaml` / `app-service.yaml` | The Next.js app, 1 replica (see note in the file) |
 | `app-pvc-uploads.yaml` | The 5Gi uploads volume (planning-design §9) |
-| `ingress.yaml` | Routes external traffic to the app Service |
+| `ingress.yaml` | **Applied**, with TLS. Routes external traffic to the app Service — currently 404s since that Service doesn't exist yet |
 
 Not yet included, follow-ups once this first deploy is working:
 database/uploads backup CronJobs and TLS (Cloudflare Origin CA cert, per

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img">
+    <defs>
+      <radialGradient id="cenoteg" cx="50%" cy="42%" r="70%">
+        <stop offset="0%" stop-color="#7FE0CE"/>
+        <stop offset="55%" stop-color="#0D7D6F"/>
+        <stop offset="100%" stop-color="#083A33"/>
+      </radialGradient>
+    </defs>
+    <rect width="1600" height="1000" fill="#083A33"/>
+    <rect width="1600" height="1000" fill="url(#cenoteg)"/>
+    <path d="M0 60 C 260 180, 520 0, 800 90 S 1340 200, 1600 60 V0 H0 Z" fill="#0A3B34" opacity="0.35"/>
+    <ellipse cx="800" cy="560" rx="430" ry="250" fill="#F5F3EC" opacity="0.08"/>
+    <ellipse cx="800" cy="560" rx="300" ry="170" fill="#F5F3EC" opacity="0.10"/>
+    <ellipse cx="800" cy="560" rx="160" ry="90" fill="#F5F3EC" opacity="0.14"/>
+  </svg>

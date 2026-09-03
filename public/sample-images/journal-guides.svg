@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img">
+    <defs>
+      <linearGradient id="guidesg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#D9EFE7"/>
+        <stop offset="100%" stop-color="#67AF95"/>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="1000" fill="url(#guidesg)"/>
+    <path d="M0 720 L90 600 L170 690 L260 560 L350 680 L430 580 L520 700 L610 590 L700 690
+             L800 540 L900 690 L990 590 L1080 700 L1170 580 L1260 690 L1350 560 L1440 690
+             L1520 600 L1600 720 V1000 H0 Z" fill="#0A5C52"/>
+    <path d="M0 800 L120 700 L240 790 L360 680 L480 800 L600 690 L720 800 L840 660 L960 800
+             L1080 700 L1200 800 L1320 680 L1440 800 L1600 720 V1000 H0 Z" fill="#0A5C52" opacity="0.7"/>
+    <circle cx="1300" cy="220" r="90" fill="#F5F3EC" opacity="0.25"/>
+  </svg>

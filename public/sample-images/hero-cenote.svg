@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img">
+    <defs>
+      <radialGradient id="herog" cx="50%" cy="42%" r="70%">
+        <stop offset="0%" stop-color="#4FCDBB"/>
+        <stop offset="55%" stop-color="#0F8C7C"/>
+        <stop offset="100%" stop-color="#0A3B34"/>
+      </radialGradient>
+    </defs>
+    <rect width="1600" height="1000" fill="#0A3B34"/>
+    <rect width="1600" height="1000" fill="url(#herog)"/>
+    <path d="M0 60 C 260 180, 520 0, 800 90 S 1340 200, 1600 60 V0 H0 Z" fill="#0A3B34" opacity="0.35"/>
+    <ellipse cx="800" cy="560" rx="430" ry="250" fill="#F5F3EC" opacity="0.08"/>
+    <ellipse cx="800" cy="560" rx="300" ry="170" fill="#F5F3EC" opacity="0.10"/>
+    <ellipse cx="800" cy="560" rx="160" ry="90" fill="#F5F3EC" opacity="0.14"/>
+  </svg>

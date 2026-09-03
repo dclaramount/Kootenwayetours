@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum EnquiryStatus {
+  NEW
+  RESPONDED
+  ARCHIVED
+}
+
+// Admin accounts only — there is no public registration.
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin")
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  blogPosts BlogPost[]
+  auditLogs AuditLog[]
+}
+
+model Tour {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  title           String
+  excerpt         String
+  // Array of paragraph strings for now; swappable for a richer editor
+  // document later without a column type change (still jsonb).
+  description     Json
+  durationMinutes Int
+  difficulty      String
+  groupSizeMin    Int
+  groupSizeMax    Int
+  priceAmount     Decimal  @db.Decimal(10, 2)
+  priceCurrency   String   @default("MXN")
+  location        String
+  highlights      Json
+  included        Json
+  excluded        Json
+  status          ContentStatus @default(DRAFT)
+  publishedAt     DateTime?
+  seoTitle        String?
+  seoDescription  String?
+  seoOgMediaId    String?
+  seoOgMedia      Media?   @relation("TourOgMedia", fields: [seoOgMediaId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  media     TourMedia[]
+  enquiries Enquiry[]
+
+  @@index([status, publishedAt])
+}
+
+model BlogPost {
+  id             String   @id @default(uuid())
+  slug           String   @unique
+  title          String
+  excerpt        String
+  content        Json
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  authorId       String?
+  author         User?    @relation(fields: [authorId], references: [id])
+  seoTitle       String?
+  seoDescription String?
+  seoOgMediaId   String?
+  seoOgMedia     Media?   @relation("PostOgMedia", fields: [seoOgMediaId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  media BlogPostMedia[]
+
+  @@index([status, publishedAt])
+}
+
+// One processed media asset (see planning-design §9 for the
+// upload -> sharp -> variants pipeline this will feed).
+model Media {
+  id               String   @id @default(uuid())
+  storageKey       String   @unique
+  originalFilename String
+  mimeType         String
+  width            Int
+  height           Int
+  sizeBytes        Int
+  variants         Json
+  altText          String
+  caption          String?
+  uploadedById     String?
+  createdAt        DateTime @default(now())
+  deletedAt        DateTime?
+
+  tourLinks     TourMedia[]
+  blogPostLinks BlogPostMedia[]
+  galleryItems  GalleryItem[]
+  tourOgFor     Tour[]     @relation("TourOgMedia")
+  blogPostOgFor BlogPost[] @relation("PostOgMedia")
+}
+
+model TourMedia {
+  id        String  @id @default(uuid())
+  tourId    String
+  mediaId   String
+  sortOrder Int     @default(0)
+  isCover   Boolean @default(false)
+
+  tour  Tour  @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([tourId, mediaId])
+}
+
+model BlogPostMedia {
+  id         String  @id @default(uuid())
+  blogPostId String
+  mediaId    String
+  sortOrder  Int     @default(0)
+  isCover    Boolean @default(false)
+
+  blogPost BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  media    Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([blogPostId, mediaId])
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  mediaId     String
+  category    String?
+  caption     String?
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+}
+
+model Enquiry {
+  id        String        @id @default(uuid())
+  tourId    String?
+  tour      Tour?         @relation(fields: [tourId], references: [id])
+  name      String
+  email     String
+  phone     String?
+  message   String
+  status    EnquiryStatus @default(NEW)
+  source    String?
+  createdAt DateTime      @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?
+  actor       User?    @relation(fields: [actorUserId], references: [id])
+  action      String
+  entityType  String
+  entityId    String
+  diff        Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
+
+// Keeps old URLs alive when an admin changes a slug (see planning-design §12, SEO).
+model Redirect {
+  id         String   @id @default(uuid())
+  entityType String
+  oldSlug    String
+  newSlug    String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, oldSlug])
+}

@@ -1,0 +1,825 @@
+<title>Tour Platform Blueprint</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f6f8f7;
+  --surface:#ffffff;
+  --surface-alt:#eaf2ef;
+  --text:#16211f;
+  --text-muted:#526361;
+  --border:#d7e1de;
+  --border-strong:#b9c9c4;
+  --accent:#0d7d6f;
+  --accent-strong:#0a5c52;
+  --accent-soft:#dcefe9;
+  --tag-decision:#9a6a12;
+  --tag-decision-soft:#f4e6c9;
+  --tag-risk:#a33b2e;
+  --tag-risk-soft:#f6e0da;
+  --code-bg:#eef2f0;
+  --shadow:0 1px 2px rgba(15,40,35,.06),0 8px 24px -12px rgba(15,40,35,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1614;
+    --surface:#131e1b;
+    --surface-alt:#17231f;
+    --text:#e7efec;
+    --text-muted:#9fb3ae;
+    --border:#24332f;
+    --border-strong:#345048;
+    --accent:#35c2ac;
+    --accent-strong:#6fe0cc;
+    --accent-soft:#173730;
+    --tag-decision:#e0aa4e;
+    --tag-decision-soft:#3a2f16;
+    --tag-risk:#e08776;
+    --tag-risk-soft:#3a201a;
+    --code-bg:#0f1a17;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1614;
+  --surface:#131e1b;
+  --surface-alt:#17231f;
+  --text:#e7efec;
+  --text-muted:#9fb3ae;
+  --border:#24332f;
+  --border-strong:#345048;
+  --accent:#35c2ac;
+  --accent-strong:#6fe0cc;
+  --accent-soft:#173730;
+  --tag-decision:#e0aa4e;
+  --tag-decision-soft:#3a2f16;
+  --tag-risk:#e08776;
+  --tag-risk-soft:#3a201a;
+  --code-bg:#0f1a17;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  font-size:16px;
+  line-height:1.6;
+}
+::selection{background:var(--accent-soft);}
+
+a{color:var(--accent-strong);}
+a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+h1,h2,h3,h4{
+  font-family:'Fraunces', Georgia, 'Times New Roman', serif;
+  font-weight:600;
+  text-wrap:balance;
+  color:var(--text);
+  line-height:1.2;
+}
+code, .mono{
+  font-family:'IBM Plex Mono', SFMono-Regular, Consolas, monospace;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:260px minmax(0,1fr);
+  gap:0;
+  max-width:1180px;
+  margin:0 auto;
+}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;}
+}
+
+/* ---- Rail ---- */
+.rail{
+  position:sticky;
+  top:0;
+  align-self:start;
+  max-height:100vh;
+  overflow-y:auto;
+  padding:28px 20px 40px 24px;
+  border-right:1px solid var(--border);
+}
+@media (max-width:900px){
+  .rail{
+    position:static;
+    max-height:none;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    padding:20px 20px 16px;
+  }
+}
+.rail-brand{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.05rem;
+  margin:0 0 4px;
+}
+.rail-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:.72rem;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--accent-strong);
+  background:var(--accent-soft);
+  border:1px solid var(--accent);
+  border-radius:100px;
+  padding:3px 10px;
+  margin:8px 0 20px;
+}
+.rail-status .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-strong);}
+
+.rail nav{display:flex; flex-direction:column; gap:2px;}
+@media (max-width:900px){
+  .rail nav{
+    flex-direction:row;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+}
+.rail nav a{
+  display:flex;
+  gap:10px;
+  align-items:baseline;
+  padding:6px 8px;
+  border-radius:6px;
+  color:var(--text-muted);
+  text-decoration:none;
+  font-size:.86rem;
+}
+.rail nav a:hover{background:var(--surface-alt); color:var(--text);}
+.rail nav a .num{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:.72rem;
+  color:var(--accent-strong);
+  min-width:1.4em;
+}
+@media (max-width:900px){
+  .rail nav a{
+    background:var(--surface-alt);
+    padding:5px 10px;
+    border-radius:100px;
+  }
+  .rail nav a .num{display:none;}
+}
+
+/* ---- Content ---- */
+main{padding:44px clamp(20px,4vw,56px) 100px;}
+.hero{
+  max-width:680px;
+  margin-bottom:56px;
+}
+.eyebrow{
+  font-size:.78rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--accent-strong);
+  font-weight:600;
+  margin:0 0 10px;
+}
+h1.title{font-size:clamp(1.9rem,4vw,2.6rem); margin:0 0 14px;}
+.dek{color:var(--text-muted); font-size:1.05rem; max-width:60ch; margin:0 0 20px;}
+.meta-row{
+  display:flex; flex-wrap:wrap; gap:10px 20px;
+  font-size:.85rem; color:var(--text-muted);
+  border-top:1px solid var(--border);
+  padding-top:16px;
+}
+.meta-row strong{color:var(--text); font-weight:600;}
+
+section.block{
+  max-width:720px;
+  padding-top:48px;
+  margin-top:48px;
+  border-top:1px solid var(--border);
+  scroll-margin-top:24px;
+}
+section.block:first-of-type{border-top:none; margin-top:0; padding-top:0;}
+.block-eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:.78rem;
+  color:var(--text-muted);
+  margin:0 0 6px;
+}
+.block h2{font-size:1.5rem; margin:0 0 6px;}
+.block .lede{color:var(--text-muted); margin:0 0 22px; max-width:62ch;}
+.block h3{font-size:1.08rem; margin:28px 0 10px;}
+.block p{margin:0 0 14px; max-width:66ch;}
+.block ul, .block ol{margin:0 0 14px; padding-left:1.2em;}
+.block li{margin-bottom:6px;}
+.block li::marker{color:var(--accent-strong);}
+
+/* tags */
+.tag{
+  display:inline-flex;
+  align-items:center;
+  font-size:.7rem;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  font-weight:600;
+  border-radius:4px;
+  padding:2px 7px;
+  margin-right:8px;
+  white-space:nowrap;
+}
+.tag-obs{background:var(--surface-alt); color:var(--text-muted); border:1px solid var(--border-strong);}
+.tag-rec{background:var(--accent-soft); color:var(--accent-strong); border:1px solid var(--accent);}
+.tag-line{display:flex; align-items:baseline; gap:8px; margin-bottom:6px;}
+
+/* callouts */
+.callout{
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  background:var(--surface);
+  border-radius:6px;
+  padding:14px 16px;
+  margin:16px 0;
+  box-shadow:var(--shadow);
+}
+.callout p{margin:0;}
+.callout p + p{margin-top:8px;}
+.callout.decision{border-left-color:var(--tag-decision);}
+.callout.risk{border-left-color:var(--tag-risk);}
+.callout-label{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  font-weight:700;
+  display:block;
+  margin-bottom:6px;
+  color:var(--tag-decision);
+}
+.callout.risk .callout-label{color:var(--tag-risk);}
+.callout.default .callout-label{color:var(--accent-strong);}
+
+/* tables */
+.twrap{overflow-x:auto; margin:0 0 20px; border:1px solid var(--border); border-radius:8px;}
+table{border-collapse:collapse; width:100%; font-size:.88rem; min-width:480px;}
+th, td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+thead th{
+  background:var(--surface-alt);
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--text-muted);
+  font-weight:600;
+}
+tbody tr:last-child td{border-bottom:none;}
+td code, th code{
+  background:var(--code-bg);
+  padding:1px 5px;
+  border-radius:4px;
+  font-size:.82em;
+}
+
+/* card grids */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin:0 0 20px;}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:14px 16px;
+}
+.card h4{font-size:.92rem; margin:0 0 6px; font-family:'IBM Plex Sans',sans-serif; font-weight:600;}
+.card p{margin:0; font-size:.84rem; color:var(--text-muted);}
+
+/* phase list */
+.phase{
+  display:grid;
+  grid-template-columns:64px 1fr;
+  gap:16px;
+  padding:16px 0;
+  border-bottom:1px solid var(--border);
+}
+.phase:last-child{border-bottom:none;}
+.phase-num{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.78rem;
+  color:var(--accent-strong);
+  background:var(--accent-soft);
+  border:1px solid var(--accent);
+  border-radius:6px;
+  height:28px;
+  width:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+}
+.phase h4{margin:0 0 4px; font-size:1rem; font-family:'IBM Plex Sans',sans-serif; font-weight:600;}
+.phase .milestone{
+  font-size:.82rem;
+  color:var(--accent-strong);
+  margin-top:6px;
+}
+.phase .milestone strong{color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:.7rem; letter-spacing:.04em;}
+
+.closing{
+  max-width:680px;
+  margin-top:56px;
+  padding:22px 22px;
+  background:var(--surface-alt);
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+.closing h3{margin-top:0;}
+</style>
+
+<div class="layout">
+  <aside class="rail">
+    <p class="rail-brand">Tour Platform Blueprint</p>
+    <span class="rail-status"><span class="dot"></span>Phase 0 · awaiting approval</span>
+    <nav>
+      <a href="#s1"><span class="num">01</span>Reference site</a>
+      <a href="#s2"><span class="num">02</span>Sitemap &amp; journeys</a>
+      <a href="#s3"><span class="num">03</span>Pages &amp; components</a>
+      <a href="#s4"><span class="num">04</span>Visual direction</a>
+      <a href="#s5"><span class="num">05</span>Architecture</a>
+      <a href="#s6"><span class="num">06</span>Libraries</a>
+      <a href="#s7"><span class="num">07</span>Data model</a>
+      <a href="#s8"><span class="num">08</span>Admin workflow</a>
+      <a href="#s9"><span class="num">09</span>Image strategy</a>
+      <a href="#s10"><span class="num">10</span>Local dev</a>
+      <a href="#s11"><span class="num">11</span>Docker/CI/K8s</a>
+      <a href="#s12"><span class="num">12</span>Cross-cutting</a>
+      <a href="#s13"><span class="num">13</span>Assumptions &amp; risks</a>
+      <a href="#s14"><span class="num">14</span>Phased plan</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <p class="eyebrow">Design &amp; architecture proposal</p>
+      <h1 class="title">A monolithic web platform for a tour-guide business</h1>
+      <p class="dek">Reviewed <a href="https://www.cenotescasatortuga.com/" target="_blank" rel="noopener">cenotescasatortuga.com</a> for inspiration, then designed an independent site and admin platform — TypeScript end to end, React frontend, one deployable backend, Postgres, and a path to Civo Kubernetes.</p>
+      <div class="meta-row">
+        <span><strong>Status</strong> Research &amp; design only — no code written yet</span>
+        <span><strong>Prepared for</strong> dac@revolgy.com</span>
+        <span><strong>Date</strong> 2026-09-03</span>
+      </div>
+    </div>
+
+    <!-- 1 -->
+    <section class="block" id="s1">
+      <p class="block-eyebrow">01</p>
+      <h2>Reference site: structure, content, and patterns</h2>
+      <p class="lede">Everything below is what the reference site actually does today. It's marked <span class="tag tag-obs">Observation</span> throughout — none of it is a recommendation yet.</p>
+
+      <h3>Information architecture</h3>
+      <p>Primary nav: <em>Inicio, Cenotes</em> (4 named cenotes), <em>Actividades</em> (4 activity types), <em>Restaurantes</em> (4 venues), <em>Paquetes</em>, an external <em>Hotel</em> link, <em>Eventos</em> (Bodas / Grupos), <em>Fotografía</em>, <em>Contacto</em>. The footer repeats most of this and adds <em>Nosotros</em>, <em>Términos de Servicio</em>, and <em>FAQ</em>. Every cenote and every restaurant gets its own URL (<code>campana.php</code>, <code>wisho.php</code>, <code>dorca.php</code>, <code>treszapotes.php</code> …) rather than living as sections of one page.</p>
+
+      <h3>Homepage, top to bottom</h3>
+      <ol>
+        <li>Header with logo and social icons</li>
+        <li>Hero slider — three rotating taglines ("Disfrute de las maravillas de la naturaleza", "Vuela sobre la selva maya", "Explora la herencia maya"), each with Reserve / Contact buttons</li>
+        <li>A booking widget (package, adults, children, date) — visibly stubbed, showing "Próximamente" (coming soon)</li>
+        <li>A short "welcome to the cenote paradise" section</li>
+        <li>Six activity cards (Tirolesa, Kayak, ATV's, Tour, Buceo, Senderismo), each a "see more" link with almost no supporting detail</li>
+        <li>An about block with two feature icons</li>
+        <li>Three package cards — Básico / Silver / Golden</li>
+        <li>A 7-image gallery grid opening in a lightbox</li>
+        <li>A newsletter sign-up</li>
+        <li>Footer: company info, social links, contact details, an Instagram feed repeating the same activity photos</li>
+      </ol>
+
+      <h3>Tours &amp; packages</h3>
+      <div class="twrap"><table>
+        <thead><tr><th>Package</th><th>Price</th><th>Hours</th><th>Rating shown</th><th>What's included</th></tr></thead>
+        <tbody>
+          <tr><td>Básico</td><td>$650 MXN / person</td><td>9am–5pm</td><td>5.0★ (4.8)</td><td>Not itemized — kayak-led</td></tr>
+          <tr><td>Silver</td><td>$1,200 MXN / person</td><td>9am–5pm</td><td>5.0★ (4.8)</td><td>Not itemized — zipline-led</td></tr>
+          <tr><td>Golden</td><td>$1,500 MXN / person</td><td>9am–5pm</td><td>5.0★ (4.8)</td><td>Not itemized — cenote-led</td></tr>
+        </tbody>
+      </table></div>
+      <p>The <code>paquetes.php</code> listing page confirms this is the full extent of the detail: no itinerary, no inclusion/exclusion list, no difficulty or fitness notes, no photos beyond one hero image per card, and no comparison view. "Reservar" is the only call to action and its destination is ambiguous — it isn't clear whether it opens a form, a cart, or just scrolls to contact details.</p>
+
+      <h3>Calls to action, contact, and the booking flow</h3>
+      <p>CTAs repeat constantly but say few distinct things: <em>Reservar</em>, <em>Contacto</em>, <em>Más Información</em>, <em>Contactar</em>, plus a floating WhatsApp button. Contact details are genuinely thorough — phone, two email addresses, a full street address (given in two slightly different formats on different pages), hours, and six social platforms. The booking widget is present on multiple pages but explicitly marked "coming soon," so today the site's real conversion path is WhatsApp or email, not a self-serve checkout.</p>
+
+      <h3>Blog and gallery</h3>
+      <p>A "Recent Posts" sidebar lists two entries whose titles ("Where Vision Meets Concrete Reality", "Raising the Bar in Construction") read as leftover template content, not tour-business copy — a sign the CMS or theme was never fully localized to the business. The gallery is a single flat grid of 7 photos plus a Grid of Instagram images; there's no per-cenote or per-activity photo album, and no captions or attribution.</p>
+
+      <h3>Strengths</h3>
+      <ul>
+        <li>Contact information is redundant and easy to find (phone, email ×2, address, hours, WhatsApp, six social links)</li>
+        <li>Clear activity taxonomy (cenotes vs. activities vs. restaurants vs. events) that maps to how the business actually operates</li>
+        <li>Nature photography is used consistently as the visual anchor of the brand</li>
+      </ul>
+      <h3>Weaknesses</h3>
+      <ul>
+        <li>Booking is advertised but not implemented ("Próximamente"), which sets an expectation the site can't meet</li>
+        <li>Pricing/package data is inconsistent in structure (package names differ between the homepage and the packages page — "Silver" vs. "Silver 1 / Silver 2") and carries almost no itinerary detail</li>
+        <li>Blog contains unrelated placeholder content, suggesting no real content workflow behind it</li>
+        <li>One flat gallery with no organization by tour, cenote, or date</li>
+        <li>Duplicate/contradictory address formatting across pages points to no single source of truth for business info</li>
+        <li>Multiple page-template styles (<code>.php</code> pages vs. static <code>.html</code> pages like <code>tour-details.html</code>) suggest an inconsistent, possibly patched-together build</li>
+      </ul>
+    </section>
+
+    <!-- 2 -->
+    <section class="block" id="s2">
+      <p class="block-eyebrow">02</p>
+      <h2>Proposed sitemap &amp; primary journeys</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <p class="lede">A flatter structure than the reference site: tours, activities, and locations become <em>filters on one tour catalog</em> rather than separate top-level nav items and separate hand-built pages per cenote.</p>
+
+      <div class="twrap"><table>
+        <thead><tr><th>Nav item</th><th>Route</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Home</td><td><code>/</code></td><td>Hero, featured tours, trust signals, latest journal posts, primary enquiry CTA</td></tr>
+          <tr><td>Tours</td><td><code>/tours</code></td><td>Filterable catalog (by activity type, difficulty, duration)</td></tr>
+          <tr><td>Tour detail</td><td><code>/tours/[slug]</code></td><td>Full itinerary, gallery, inclusions, meeting point, enquiry CTA</td></tr>
+          <tr><td>Gallery</td><td><code>/gallery</code></td><td>Curated photo library, filterable by tour/category</td></tr>
+          <tr><td>Journal (blog)</td><td><code>/journal</code></td><td>Listing, newest first, optional category filter</td></tr>
+          <tr><td>Journal post</td><td><code>/journal/[slug]</code></td><td>Article, related tours, share/enquire CTA</td></tr>
+          <tr><td>About</td><td><code>/about</code></td><td>Team, guiding philosophy, safety/certifications</td></tr>
+          <tr><td>Contact</td><td><code>/contact</code></td><td>Enquiry form, map, phone/WhatsApp/email, hours</td></tr>
+          <tr><td>Admin</td><td><code>/admin/*</code></td><td>Authenticated content management — not in public nav</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Primary user journeys</h3>
+      <ul>
+        <li><strong>Discover → enquire:</strong> Home → Tours (filter by activity) → Tour detail → "Check availability" enquiry form, pre-filled with the tour name</li>
+        <li><strong>Research-led:</strong> Journal post (found via search/social) → related tour link → Tour detail → enquiry</li>
+        <li><strong>Visual browser:</strong> Gallery → tour tag on a photo → Tour detail</li>
+        <li><strong>Direct contact:</strong> Any page → sticky WhatsApp/phone CTA → off-site conversation (mirrors what already works on the reference site today)</li>
+      </ul>
+    </section>
+
+    <!-- 3 -->
+    <section class="block" id="s3">
+      <p class="block-eyebrow">03</p>
+      <h2>Pages, sections &amp; reusable components</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <p class="lede">Everything on the public site is built from a small shared component set, so admin-entered content (a tour, a post, a gallery image) automatically renders consistently everywhere it appears.</p>
+
+      <div class="cards">
+        <div class="card"><h4>TourCard</h4><p>Cover image, title, duration, difficulty badge, from-price. Used in catalog, home, related-tours.</p></div>
+        <div class="card"><h4>TourHero</h4><p>Full-bleed cover photo, title, quick facts strip (duration / group size / difficulty / meeting point).</p></div>
+        <div class="card"><h4>ItineraryList</h4><p>Ordered stops/highlights with icon markers — reused for both tours and events.</p></div>
+        <div class="card"><h4>EnquiryForm</h4><p>Name, email, phone, message, optional tour context. Embedded inline or in a modal.</p></div>
+        <div class="card"><h4>PostCard / PostHero</h4><p>Blog equivalents of the tour components; share the same image treatment.</p></div>
+        <div class="card"><h4>GalleryGrid + Lightbox</h4><p>Masonry/grid of optimized images with keyboard-accessible lightbox.</p></div>
+        <div class="card"><h4>ContactBar</h4><p>Sticky footer/side element: call, WhatsApp, email — always reachable.</p></div>
+        <div class="card"><h4>SiteHeader / SiteFooter</h4><p>Nav, contact summary, social links, legal links.</p></div>
+        <div class="card"><h4>Admin: MediaPicker</h4><p>Browse/search/upload the media library from any content form.</p></div>
+        <div class="card"><h4>Admin: RichTextEditor</h4><p>Shared editor for tour descriptions and blog bodies.</p></div>
+        <div class="card"><h4>Admin: StatusBadge</h4><p>Draft / Published / Unpublished, consistent across tours, posts, gallery.</p></div>
+        <div class="card"><h4>Admin: SeoPanel</h4><p>Meta title, description, slug, OG image — same panel on tours and posts.</p></div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="block" id="s4">
+      <p class="block-eyebrow">04</p>
+      <h2>Visual direction</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <p class="lede">Inspired by the setting the reference site sells — limestone, cenote water, jungle canopy — without reusing its layout, colors, or logo.</p>
+
+      <h3>Palette</h3>
+      <div class="twrap"><table>
+        <thead><tr><th>Token</th><th>Hex</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Limestone</td><td><code>#F5F3EC</code></td><td>Page background — pale stone, not stock "cream"</td></tr>
+          <tr><td>Ink</td><td><code>#1B2521</code></td><td>Body text, near-black with a green cast</td></tr>
+          <tr><td>Cenote teal</td><td><code>#0D7D6F</code></td><td>Primary accent — links, active states, primary buttons</td></tr>
+          <tr><td>Deep jungle</td><td><code>#0A3B34</code></td><td>Header/footer surfaces, hero overlays</td></tr>
+          <tr><td>Clay</td><td><code>#B5651D</code></td><td>Sparing use — badges like "Advanced", limited-availability notices</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Typography</h3>
+      <p>A warm serif display face for headings (evokes carved stone/signage without being a cliché travel-brand script), paired with a clean grotesque for body text and UI, and a monospace for data-like details (durations, prices, dates) so numbers line up.</p>
+      <h3>Imagery</h3>
+      <p>Full-bleed photography stays the hero of every page, as on the reference site — but each tour gets its own short gallery (5–10 images) rather than one shared homepage grid, and every image carries required alt text captured at upload time.</p>
+      <h3>Spacing &amp; responsive behavior</h3>
+      <p>Generous section spacing on desktop collapses to a single column with larger touch targets on mobile; the sticky contact bar (call/WhatsApp/email) stays reachable at all breakpoints, mirroring the one part of the reference site's mobile behavior worth keeping.</p>
+    </section>
+
+    <!-- 5 -->
+    <section class="block" id="s5">
+      <p class="block-eyebrow">05</p>
+      <h2>Technical architecture</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <p class="lede">One Next.js application (TypeScript, App Router) provides both the public/admin frontend and the JSON API, so "monolith" means one codebase, one build, one container, one deployment — not a split frontend/backend that happens to ship together.</p>
+      <ul>
+        <li>Public pages (<code>/</code>, <code>/tours/*</code>, <code>/journal/*</code>, <code>/gallery</code>, <code>/contact</code>) render as React Server Components for fast loads and clean SEO — no client-side data fetch needed for first paint.</li>
+        <li>The admin UI (<code>/admin/*</code>) is an authenticated client-heavy area using the same App Router, calling Route Handlers under <code>/api/*</code> for mutations.</li>
+        <li>Route Handlers double as the "backend API" the brief asks for — they're ordinary HTTP endpoints, testable and reusable independent of the React layer.</li>
+      </ul>
+
+      <h3>Project structure</h3>
+      <div class="twrap"><table>
+        <tbody>
+          <tr><td><code>src/app/(public)/</code></td><td>Home, tours, journal, gallery, about, contact routes</td></tr>
+          <tr><td><code>src/app/admin/</code></td><td>Login + protected dashboard, tour/post/media management</td></tr>
+          <tr><td><code>src/app/api/</code></td><td>Route handlers: auth, tours, blog-posts, media, enquiries, health, ready</td></tr>
+          <tr><td><code>src/components/</code></td><td><code>ui/</code>, <code>marketing/</code>, <code>admin/</code> — see §3</td></tr>
+          <tr><td><code>src/lib/</code></td><td><code>db.ts</code> (Prisma client), <code>auth.ts</code>, <code>validation/</code> (Zod schemas), <code>image.ts</code> (sharp helpers), <code>storage.ts</code></td></tr>
+          <tr><td><code>prisma/</code></td><td><code>schema.prisma</code>, <code>migrations/</code>, <code>seed.ts</code></td></tr>
+          <tr><td><code>infra/docker/</code></td><td><code>Dockerfile</code> (multi-stage)</td></tr>
+          <tr><td><code>infra/k8s/</code></td><td>Namespace, Deployment, Service, Ingress, PVCs, Postgres, CronJobs, Secret templates</td></tr>
+          <tr><td><code>.github/workflows/</code></td><td><code>ci.yml</code></td></tr>
+          <tr><td><code>docker-compose.yml</code></td><td>Local Postgres + app for development</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 6 -->
+    <section class="block" id="s6">
+      <p class="block-eyebrow">06</p>
+      <h2>Recommended libraries &amp; frameworks</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <div class="twrap"><table>
+        <thead><tr><th>Choice</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>Next.js 14+</code> (App Router, TS)</td><td>SSR + API routes in one deployable; built-in image handling; strong SEO defaults for a content-driven marketing site</td></tr>
+          <tr><td><code>Prisma</code></td><td>Typed schema + migrations against Postgres; generated types flow straight into API and UI code</td></tr>
+          <tr><td><code>PostgreSQL 16</code></td><td>Required; JSONB covers flexible fields (itineraries, SEO blocks) without extra tables</td></tr>
+          <tr><td><code>Auth.js</code> (Credentials + DB sessions)</td><td>Admin-only login with revocable sessions, without hand-rolling cookie/JWT handling</td></tr>
+          <tr><td><code>argon2</code></td><td>Current best-practice password hashing (memory-hard, resists GPU cracking)</td></tr>
+          <tr><td><code>Zod</code></td><td>One schema definition validates both API input and admin forms — no drift between client and server rules</td></tr>
+          <tr><td><code>React Hook Form</code></td><td>Performant form state, pairs directly with Zod resolvers</td></tr>
+          <tr><td><code>Tiptap</code></td><td>Structured rich-text editing for tour/blog bodies, stores clean JSON rather than free-form HTML</td></tr>
+          <tr><td><code>sharp</code></td><td>Fast server-side resize/re-encode to WebP — the core of the 5&nbsp;GiB storage strategy (§9)</td></tr>
+          <tr><td><code>Tailwind CSS</code></td><td>Design tokens as config, fast responsive layout without a separate CSS build step</td></tr>
+          <tr><td><code>shadcn/ui</code> (Radix)</td><td>Accessible unstyled primitives for admin forms/menus — keeps the public site's look bespoke while the admin gets accessibility for free</td></tr>
+          <tr><td><code>TanStack Query</code></td><td>Client-side cache for admin mutations (create/edit/publish) without hand-written loading/error state</td></tr>
+          <tr><td><code>pino</code></td><td>Structured JSON logs to stdout — plays well with Kubernetes log collection</td></tr>
+          <tr><td><code>Vitest</code> + Testing Library, <code>Playwright</code></td><td>Unit/component tests fast in CI; e2e added once core flows stabilize</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 7 -->
+    <section class="block" id="s7">
+      <p class="block-eyebrow">07</p>
+      <h2>Preliminary PostgreSQL data model</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <p class="lede">Enough structure to support publish workflows, SEO, media reuse, and enquiries — deliberately not over-normalized before real content exists.</p>
+
+      <h3><code>users</code> — admin accounts only</h3>
+      <div class="twrap"><table><tbody>
+        <tr><td><code>id</code> uuid pk</td><td><code>email</code> citext unique</td><td><code>password_hash</code> text</td></tr>
+        <tr><td><code>name</code> text</td><td><code>role</code> text (<code>admin</code>, extensible)</td><td><code>is_active</code> boolean</td></tr>
+        <tr><td><code>last_login_at</code> timestamptz</td><td><code>created_at</code> / <code>updated_at</code></td><td>—</td></tr>
+      </tbody></table></div>
+
+      <h3><code>tours</code></h3>
+      <div class="twrap"><table><tbody>
+        <tr><td><code>id</code>, <code>slug</code> unique</td><td><code>title</code>, <code>excerpt</code></td><td><code>description</code> jsonb (rich text)</td></tr>
+        <tr><td><code>duration_minutes</code>, <code>difficulty</code></td><td><code>group_size_min/max</code></td><td><code>price_amount</code> numeric, <code>price_currency</code></td></tr>
+        <tr><td><code>location</code></td><td><code>highlights</code> / <code>included</code> / <code>excluded</code> jsonb arrays</td><td><code>status</code> (<code>draft</code>/<code>published</code>/<code>archived</code>), <code>published_at</code></td></tr>
+        <tr><td><code>seo_title</code>, <code>seo_description</code></td><td><code>seo_og_media_id</code> fk media</td><td><code>created_by</code>/<code>updated_by</code> fk users, timestamps</td></tr>
+      </tbody></table></div>
+
+      <h3><code>blog_posts</code></h3>
+      <p>Same shape as <code>tours</code> for the parts that repeat: <code>slug</code>, <code>title</code>, <code>excerpt</code>, <code>content</code> jsonb, <code>status</code>, <code>published_at</code>, <code>seo_*</code> fields, plus <code>author_id</code> fk <code>users</code>.</p>
+
+      <h3><code>media</code> &amp; join tables</h3>
+      <div class="twrap"><table><tbody>
+        <tr><td><code>id</code>, <code>storage_key</code></td><td><code>original_filename</code>, <code>mime_type</code></td><td><code>width</code>, <code>height</code>, <code>size_bytes</code></td></tr>
+        <tr><td><code>variants</code> jsonb (thumb/medium/large paths+sizes)</td><td><code>alt_text</code>, <code>caption</code></td><td><code>uploaded_by</code>, <code>created_at</code>, <code>deleted_at</code> (soft delete)</td></tr>
+      </tbody></table></div>
+      <p><code>tour_media</code> and <code>blog_post_media</code> join tables (<code>entity_id</code>, <code>media_id</code>, <code>sort_order</code>, <code>is_cover</code>) let one image be reused across tours, posts, and the gallery without duplication. <code>gallery_items</code> (<code>media_id</code>, <code>category</code>, <code>caption</code>, <code>sort_order</code>, <code>is_published</code>) drives the standalone gallery page.</p>
+
+      <h3>Supporting tables</h3>
+      <ul>
+        <li><code>enquiries</code> — <code>tour_id</code> (nullable), <code>name</code>, <code>email</code>, <code>phone</code>, <code>message</code>, <code>status</code>, <code>source</code>, <code>created_at</code></li>
+        <li><code>audit_log</code> — <code>actor_user_id</code>, <code>action</code>, <code>entity_type</code>, <code>entity_id</code>, <code>diff</code> jsonb, <code>ip_address</code>, <code>created_at</code></li>
+        <li><code>redirects</code> — <code>old_slug</code> → <code>new_slug</code> per entity type, so changing a slug doesn't 404 an indexed page</li>
+      </ul>
+      <p>Indexes on every <code>slug</code>, <code>status</code>, and <code>published_at</code> column, since those drive every public-facing query.</p>
+    </section>
+
+    <!-- 8 -->
+    <section class="block" id="s8">
+      <p class="block-eyebrow">08</p>
+      <h2>Admin content workflow</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <ul>
+        <li><strong>Login</strong> — rate-limited, generic failure messages, account lockout after repeated failures; no public registration exists anywhere in the app.</li>
+        <li><strong>Dashboard</strong> — tours, posts, and media each list with a status badge (Draft / Published / Unpublished) and last-edited info.</li>
+        <li><strong>Editing</strong> — slug auto-generated from title, editable with uniqueness validation; rich-text body via Tiptap; every field validated with the same Zod schema client and server side.</li>
+        <li><strong>Publishing</strong> — explicit Publish/Unpublish action toggles <code>status</code> and stamps <code>published_at</code>; drafts are never reachable on public routes regardless of a guessed URL.</li>
+        <li><strong>Media library</strong> — drag-drop upload with automatic processing (§9), search/filter, alt-text required before an image can be attached to published content, "replace" keeps the same media record so existing tour/post references don't break, "delete" soft-deletes and is caught by the orphan-cleanup job.</li>
+        <li><strong>SEO panel</strong> — meta title, meta description, slug, and OG image, shared across tours and posts as one component.</li>
+        <li><strong>Audit log</strong> — every create/edit/publish/delete is recorded with actor, timestamp, and a diff, viewable per entity.</li>
+      </ul>
+    </section>
+
+    <!-- 9 -->
+    <section class="block" id="s9">
+      <p class="block-eyebrow">09</p>
+      <h2>Image upload, optimization &amp; storage strategy</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <p class="lede">Everything is sized to fit comfortably inside the 5&nbsp;GiB uploads volume, with visibility into usage before it becomes a problem.</p>
+
+      <h3>Pipeline</h3>
+      <ol>
+        <li>Accept JPEG/PNG/WebP/HEIC only, capped at 15&nbsp;MB pre-processing; reject everything else by sniffing actual file bytes, not just the extension or declared MIME type.</li>
+        <li>Strip EXIF metadata (privacy + size) and re-encode with <code>sharp</code>, which also neutralizes any payload hidden in the original file.</li>
+        <li>Generate four variants as WebP: thumbnail (320px), medium (800px), large (1600px), and a display "original" capped at 2560px — the true uploaded original is discarded once variants exist.</li>
+        <li>Store only the processed files, under content-hashed filenames, on the persistent volume; record paths and sizes in <code>media.variants</code>.</li>
+      </ol>
+
+      <h3>Budget</h3>
+      <p>Four WebP variants at quality ~75–80 average roughly 500–700&nbsp;KB per source image. At that rate, 5&nbsp;GiB holds on the order of <strong>7,000–9,000 images</strong> — far beyond what a single tour operator's catalog, gallery, and blog will realistically need (more likely a few hundred to low thousands over several years). The admin dashboard should still surface current usage and warn at 80% of quota, and the upload endpoint should reject new uploads once the volume is effectively full rather than fail unpredictably mid-write.</p>
+
+      <h3>Cleanup</h3>
+      <p>A scheduled job (Kubernetes CronJob) finds <code>media</code> rows with no active reference in <code>tour_media</code>, <code>blog_post_media</code>, or <code>gallery_items</code> and past their soft-delete grace period, then removes the files and the row — so deleting a tour or swapping a cover photo doesn't silently leak storage.</p>
+    </section>
+
+    <!-- 10 -->
+    <section class="block" id="s10">
+      <p class="block-eyebrow">10</p>
+      <h2>Local development setup</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+      <ul>
+        <li><code>docker-compose.yml</code> runs Postgres locally, matching the production engine/version; the app itself runs via <code>npm run dev</code> against it for fast iteration, or in Docker for a closer prod parity check.</li>
+        <li>Local uploads write to the same relative path the production PVC mounts (e.g. <code>/data/uploads</code>), just backed by a bind-mounted folder instead of a cloud volume — so upload/serve code never branches on environment.</li>
+        <li><code>.env.example</code> documents every variable (<code>DATABASE_URL</code>, <code>SESSION_SECRET</code>, <code>UPLOAD_DIR</code>, <code>NODE_ENV</code>, mail provider keys).</li>
+        <li><code>prisma migrate dev</code> plus a TypeScript seed script create a default admin user and a handful of realistic sample tours/posts/images, so a fresh clone looks like a working site immediately, not an empty shell.</li>
+        <li>Quickstart: <code>cp .env.example .env</code> → <code>docker compose up -d postgres</code> → <code>npm install</code> → <code>npm run db:migrate &amp;&amp; npm run db:seed</code> → <code>npm run dev</code>.</li>
+      </ul>
+    </section>
+
+    <!-- 11 -->
+    <section class="block" id="s11">
+      <p class="block-eyebrow">11</p>
+      <h2>Docker, GitHub Actions &amp; Civo Kubernetes plan</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+
+      <h3>Docker</h3>
+      <p>Multi-stage <code>Dockerfile</code>: install/build stage, then a slim <code>node:&lt;current LTS&gt;-alpine</code> runtime stage running as a non-root user, containing only production dependencies and the compiled build.</p>
+
+      <h3>GitHub Actions (build &amp; validate, per the brief's scope)</h3>
+      <p>On every push/PR: checkout → set up Node with dependency caching → <code>npm ci</code> → typecheck → lint → unit tests → <code>next build</code> → <code>docker buildx build</code>. On <code>main</code>, additionally push the image to GHCR tagged with the commit SHA. Deployment stays a separate, later workflow — triggered manually against the Civo cluster once credentials and namespace exist.</p>
+
+      <h3>Civo Kubernetes (design now, apply later)</h3>
+      <div class="twrap"><table>
+        <thead><tr><th>Resource</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>App <code>Deployment</code> (1 replica)</td><td>The Next.js container — see §13 for why replicas stay at 1 initially</td></tr>
+          <tr><td>App <code>PersistentVolumeClaim</code> (5&nbsp;Gi, RWO)</td><td>Mounted at <code>/data/uploads</code> for the media pipeline in §9</td></tr>
+          <tr><td>Postgres <code>StatefulSet</code> + its own PVC</td><td>Small in-cluster database pod, separate volume from the uploads claim</td></tr>
+          <tr><td><code>Service</code> + <code>Ingress</code></td><td>Routes traffic in; TLS via cert-manager + Let's Encrypt against Civo's ingress controller</td></tr>
+          <tr><td><code>ConfigMap</code> / <code>Secret</code></td><td>Non-secret config vs. DB credentials, session secret, mail provider key</td></tr>
+          <tr><td><code>CronJob</code> ×2</td><td>Nightly Postgres dump and uploads sync — see §12 backups</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 12 -->
+    <section class="block" id="s12">
+      <p class="block-eyebrow">12</p>
+      <h2>Cross-cutting concerns</h2>
+      <div class="tag-line"><span class="tag tag-rec">Recommendation</span></div>
+
+      <h3>Security</h3>
+      <ul>
+        <li>Argon2id password hashing; httpOnly/secure/SameSite session cookies; CSRF protection on all state-changing routes</li>
+        <li>Zod validation at every API boundary; rich-text content sanitized before storage and before render to prevent stored XSS</li>
+        <li>Uploads validated by content-sniffing, size-capped, and re-encoded through <code>sharp</code> (which also strips embedded payloads); SVG uploads disallowed</li>
+        <li>Rate limiting on login and the public enquiry form; least-privilege database user; security headers (CSP, HSTS, X-Frame-Options)</li>
+        <li>Dependency scanning in CI; no secrets ever committed; full audit trail per §8</li>
+      </ul>
+      <h3>Backups</h3>
+      <p>Nightly <code>pg_dump</code> and a nightly uploads sync (via <code>restic</code> or <code>rclone</code>) both push to Civo Object Storage with a retention window (e.g. 14 daily + 8 weekly); a periodic restore drill is worth scheduling once real content exists.</p>
+      <h3>Migration safety</h3>
+      <p>Prisma Migrate with reviewed, checked-in migration files; migrations run as a pre-deploy step (init container or CI gate) rather than on app boot, so a bad migration blocks the rollout instead of racing multiple pod starts.</p>
+      <h3>Observability</h3>
+      <p><code>/api/health</code> (process liveness) and <code>/api/ready</code> (DB connectivity) for Kubernetes probes; structured JSON logs via <code>pino</code> to stdout; optional Sentry integration for exception tracking once the app is live.</p>
+      <h3>Accessibility</h3>
+      <p>Semantic HTML, mandatory alt text on every image (enforced in the admin form, not just encouraged), WCAG AA contrast in the palette in §4, full keyboard navigation, visible focus states, labeled form fields with real error text.</p>
+      <h3>SEO</h3>
+      <p>Editable meta title/description/slug/OG image per tour and post; auto-generated <code>sitemap.xml</code> and <code>robots.txt</code>; canonical URLs; JSON-LD structured data (tour → <code>TouristTrip</code>, post → <code>Article</code>, site → <code>LocalBusiness</code>); the <code>redirects</code> table from §7 keeps old links alive when a slug changes.</p>
+      <h3>Performance</h3>
+      <p>Server-rendered/ISR public pages with on-demand revalidation triggered by a publish action, so editors see updates go live immediately without a full rebuild; optimized image variants from §9 double as the performance strategy for photography-heavy pages.</p>
+    </section>
+
+    <!-- 13 -->
+    <section class="block" id="s13">
+      <p class="block-eyebrow">13</p>
+      <h2>Assumptions, risks &amp; open questions</h2>
+
+      <div class="callout decision">
+        <span class="callout-label">Decision needed</span>
+        <p><strong>Online booking/payment is treated as optional</strong>, per the brief — the initial site uses an enquiry form (name, email, phone, tour, message) plus WhatsApp/phone/email as the conversion path, matching what actually works on the reference site today. Adding real booking later would need: a payment gateway (Stripe Checkout is the simplest way to keep card data out of PCI scope), an availability/capacity model per tour and date, and a cancellation/refund policy captured in the data model.</p>
+      </div>
+      <div class="callout decision">
+        <span class="callout-label">Decision needed</span>
+        <p><strong>Language.</strong> The reference site is Spanish-only; I've assumed the new site launches in English (the brief and this workspace are in English) but the content model — separate <code>title</code>/<code>description</code>/<code>excerpt</code> fields per entity — is structured so a second locale could be added without a schema rewrite. Confirm target audience/languages before content entry begins.</p>
+      </div>
+      <div class="callout decision">
+        <span class="callout-label">Decision needed</span>
+        <p><strong>Transactional email provider</strong> for enquiry notifications (e.g. Resend, Postmark, or SMTP through an existing provider) isn't specified — needs a choice before §8's enquiry flow can actually notify anyone.</p>
+      </div>
+      <div class="callout decision">
+        <span class="callout-label">Decision needed</span>
+        <p><strong>Domain name and Civo cluster sizing</strong> (node count/size, existing or to-be-provisioned) aren't known yet — both are needed to finalize the Ingress/DNS/TLS setup in §11 and to size pod resource requests.</p>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Assumption</span>
+        <p>The 5&nbsp;GiB figure applies specifically to uploaded media, per the brief's wording. Postgres data is assumed to need its own, separate volume allocation — worth confirming before cluster storage is provisioned.</p>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Assumption</span>
+        <p>One admin role is sufficient at launch (no editor/approver distinction). The <code>role</code> column in §7 is there so finer-grained roles can be added later without a migration to add the concept from scratch.</p>
+      </div>
+      <div class="callout risk">
+        <span class="callout-label">Risk</span>
+        <p><strong>Single replica, uploads on a PVC.</strong> Because uploads live on a <code>ReadWriteOnce</code> volume, only one pod can mount it at a time — this rules out horizontal scaling and means a brief gap during rolling deploys (mitigated with a short readiness-gated rollout, not a true zero-downtime deploy). It's a reasonable starting point at this traffic scale. The clean upgrade path, if traffic or availability needs grow, is moving uploads to Civo Object Storage (S3-compatible) — that removes the single-writer constraint entirely and unblocks multiple replicas without any change to the data model.</p>
+      </div>
+      <div class="callout risk">
+        <span class="callout-label">Risk</span>
+        <p>Image processing (<code>sharp</code>) is CPU/memory-bound at upload time; the app pod's resource requests/limits need real-world testing against typical phone/camera photo sizes before they're finalized.</p>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section class="block" id="s14">
+      <p class="block-eyebrow">14</p>
+      <h2>Phased implementation plan</h2>
+      <p class="lede">Each phase produces something runnable; nothing here starts until this proposal is approved.</p>
+
+      <div class="phase">
+        <div class="phase-num">P1</div>
+        <div>
+          <h4>Project scaffolding</h4>
+          <p>Next.js + TypeScript app, Tailwind, Prisma + Postgres wiring, Docker, local docker-compose, CI pipeline (lint/typecheck/test/build), base layout using §4's palette/type, health endpoints.</p>
+          <p class="milestone"><strong>Milestone</strong> <code>npm run dev</code> works locally; CI builds the Docker image on every push.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P2</div>
+        <div>
+          <h4>Data model &amp; admin auth</h4>
+          <p>Prisma schema + first migration, seed script, Auth.js credentials login, protected <code>/admin</code> shell, audit-log scaffolding.</p>
+          <p class="milestone"><strong>Milestone</strong> An admin can log in and see an empty dashboard, deployed to a dev environment.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P3</div>
+        <div>
+          <h4>Content management</h4>
+          <p>Full tour and blog-post CRUD, publish/unpublish, slug handling, SEO panel, rich-text editing.</p>
+          <p class="milestone"><strong>Milestone</strong> Admin can manage tour and blog content end to end.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P4</div>
+        <div>
+          <h4>Media pipeline</h4>
+          <p>Upload endpoint, <code>sharp</code> processing, media library UI, assignment to tours/posts/gallery, usage tracking, orphan-cleanup CronJob.</p>
+          <p class="milestone"><strong>Milestone</strong> Images upload, optimize, and attach to content within the storage budget from §9.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P5</div>
+        <div>
+          <h4>Public website</h4>
+          <p>Home, tour catalog/detail, journal listing/detail, gallery, contact/enquiry form, responsive polish, sitemap/robots.</p>
+          <p class="milestone"><strong>Milestone</strong> Full public site is navigable and entirely content-driven, locally.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P6</div>
+        <div>
+          <h4>Hardening</h4>
+          <p>Security headers, rate limiting, CSRF, sanitization audit, accessibility pass, Lighthouse/performance pass, error tracking.</p>
+          <p class="milestone"><strong>Milestone</strong> A dedicated security review passes clean; Lighthouse scores meet targets.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P7</div>
+        <div>
+          <h4>Kubernetes deployment</h4>
+          <p>Write and apply the §11 manifests, Ingress + TLS, secrets, backup CronJobs, deploy to the Civo cluster, smoke test.</p>
+          <p class="milestone"><strong>Milestone</strong> App running on Civo, reachable over HTTPS, with backups configured and verified.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">P8</div>
+        <div>
+          <h4>Optional / future</h4>
+          <p>Online booking + payments, a second language, multi-admin roles, migration to object storage for uploads to unlock multiple replicas.</p>
+          <p class="milestone"><strong>Milestone</strong> Scoped and estimated only once the core platform is live and real usage data exists.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="closing">
+      <h3>Next step</h3>
+      <p>This is research and design only — no application code has been written. Please flag anything to change, and answer the four decisions marked in §13 where you have a preference; otherwise I'll proceed on the stated assumptions once you approve moving into Phase&nbsp;1.</p>
+    </div>
+  </main>
+</div>

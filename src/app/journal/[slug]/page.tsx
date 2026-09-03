@@ -1,16 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getPostBySlug, getPublishedPosts } from "@/lib/queries";
+import { getPostBySlug } from "@/lib/queries";
 import { RichText } from "@/components/rich-text";
 import { formatDate } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  const posts = await getPublishedPosts();
-  return posts.map((post) => ({ slug: post.slug }));
-}
+// Rendered on demand rather than pre-listed at build time — see the note
+// in src/app/tours/[slug]/page.tsx.
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

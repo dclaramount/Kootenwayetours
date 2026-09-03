@@ -1,0 +1,14 @@
+# The 5Gi budget for uploaded images/content (see planning-design §9).
+# ReadWriteOnce means only one pod can mount this at a time — see the
+# "single replica" note in app-deployment.yaml and iteration-1 §13.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads
+  namespace: kootenwayetours
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: civo-volume
+  resources:
+    requests:
+      storage: 5Gi

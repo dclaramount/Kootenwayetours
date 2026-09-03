@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+.idea
+.vscode
+data
+planning-design
+infra/k8s
+*.log
+.env
+.env.*
+!.env.example
+npm-debug.log*

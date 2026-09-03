@@ -5,6 +5,12 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ContactBar } from "@/components/contact-bar";
 
+// Content here comes from Postgres and changes independently of deploys
+// (via the future admin panel), so every page renders on request rather
+// than being statically baked at build time — which also means the build
+// itself never needs a live database. Child routes inherit this.
+export const dynamic = "force-dynamic";
+
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",

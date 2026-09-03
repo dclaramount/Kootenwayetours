@@ -1,0 +1,13 @@
+# Non-secret runtime configuration for the app container.
+# Secrets (DATABASE_URL, SESSION_SECRET, etc.) live in the Secret instead —
+# see secret.example.yaml and the README in this directory.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kootenwayetours-config
+  namespace: kootenwayetours
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
+  UPLOAD_DIR: "/data/uploads"

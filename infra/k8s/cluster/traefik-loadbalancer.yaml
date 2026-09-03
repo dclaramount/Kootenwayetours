@@ -1,0 +1,32 @@
+# Cluster-level platform resource — lives in kube-system, not the app
+# namespace, and isn't tied to any one app deploy. Not part of the app
+# kustomization.yaml; apply it separately (see infra/k8s/README.md).
+#
+# Gives Traefik (already running as a hostNetwork DaemonSet, see
+# infra/k8s/README.md) a stable public IP via a dedicated Civo Load
+# Balancer, instead of relying on the single node's own IP. Civo's Cloud
+# Controller Manager (civo-ccm, already running in kube-system) watches for
+# Services of type LoadBalancer and provisions/manages the matching Civo
+# Load Balancer automatically — nothing to configure by hand in the Civo
+# dashboard.
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-lb
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/managed-by: kootenwayetours-infra
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-kube-system
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: websecure
+      port: 443
+      targetPort: 443
+      protocol: TCP

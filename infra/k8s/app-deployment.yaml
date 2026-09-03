@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: kootenwayetours
+  labels:
+    app: kootenwayetours
+spec:
+  # Deliberately 1: the uploads PVC below is ReadWriteOnce, so only one pod
+  # can mount it at a time. Moving uploads to Civo Object Storage is the
+  # documented upgrade path if this ever needs to scale out
+  # (see planning-design/iteration-1 §13).
+  replicas: 1
+  strategy:
+    # RollingUpdate would briefly try to run two pods, and the second can't
+    # mount the RWO uploads volume. Recreate accepts a short gap on deploy
+    # instead of a stuck rollout.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kootenwayetours
+  template:
+    metadata:
+      labels:
+        app: kootenwayetours
+    spec:
+      containers:
+        - name: app
+          # TODO: point at a real published tag once the GitHub Actions
+          # pipeline is building and pushing images (see repo root README).
+          image: ghcr.io/dclaramount/kootenwayetours:latest
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: kootenwayetours-config
+            - secretRef:
+                name: kootenwayetours-secrets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 320Mi
+          volumeMounts:
+            - name: uploads
+              mountPath: /data/uploads
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: uploads

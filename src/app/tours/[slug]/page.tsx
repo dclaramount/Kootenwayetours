@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getTourBySlug, getPublishedTours } from "@/lib/queries";
+import { getTourBySlug } from "@/lib/queries";
 import { RichText } from "@/components/rich-text";
 import { BUSINESS } from "@/lib/business";
 import { formatDuration } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  const tours = await getPublishedTours();
-  return tours.map((tour) => ({ slug: tour.slug }));
-}
+// Rendered on demand rather than pre-listed at build time: tours are
+// published dynamically through the (future) admin panel, so a build-time
+// slug list would go stale the moment a new one is added. It also means
+// the Docker build never needs a live database.
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
